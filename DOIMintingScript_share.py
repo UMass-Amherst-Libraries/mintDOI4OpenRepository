@@ -178,6 +178,7 @@ doimetadata["url"] = handle
 # split personal names into given name and family name 
 #Personal authors are identified as having a comma and corporate authors as non-comma
 for i in dcauthorkeys:
+    # to do: change it to HOF, map
     if "," in doimetadata["creators"][i]["name"]:
         doimetadata["creators"][i]["nameType"] = "Personal"
         fullname = doimetadata["creators"][i]["name"].split(', ')
@@ -187,7 +188,6 @@ for i in dcauthorkeys:
         doimetadata["creators"][i]["nameType"] = "Organizational"
         doimetadata["creators"][i]["givenName"] = ""
         doimetadata["creators"][i]["familyName"] = ""
-#print(doimetadata)
 
 #%%
 #Map document types to resourceTypeGeneral and resourceType
@@ -405,5 +405,6 @@ data7 = data6.read()
 doiuploadresponse = requests.patch(itemurl, cookies=cookies, headers=headers, data=data7)
 
 print(doiuploadresponse.text)
+
 
 

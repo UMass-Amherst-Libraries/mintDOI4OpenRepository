@@ -119,115 +119,113 @@ def transform(dct, affected_keys):
     for new_key, keys in affected_keys.items():
         new_dct[new_key] = {key: new_dct.pop(key) for key in keys}
     return new_dct
-
-data2 = doimetadata
   
 #Select only the fields needed for DataCite metadata
 #Create dictionary for authors
-authors = {key:{key: data2[key]} for key in dcauthorkeys}
+authors = {key:{key: doimetadata[key]} for key in dcauthorkeys}
 for i in dcauthorkeys:
     field = authors[i].pop(i)
     authors[i]["name"] = field
 authors = transform(authors, {"creators": dcauthorkeys})
 #Create dictionary for all other fields taking into account items 
 # without an orcid and/or items with multiple authors 
-if ('dc.identifier.orcid' in data2.keys() and authorcount == 1):
-    data2 = {key: data2[key] for key in data2.keys() 
+if ('dc.identifier.orcid' in doimetadata.keys() and authorcount == 1):
+    doimetadata = {key: doimetadata[key] for key in doimetadata.keys() 
              & {'dc.date.issued','dc.description.abstract',
                 'dc.identifier.uri','dc.publisher','dc.title',
                 'dc.type','dc.identifier.orcid'}}
 else: 
-  data2 = {key: data2[key] for key in data2.keys() 
+  doimetadata = {key: doimetadata[key] for key in doimetadata.keys() 
        & {'dc.date.issued','dc.description.abstract',
           'dc.identifier.uri','dc.publisher','dc.title',
           'dc.type'}} 
 #Combine the two dictionaries using Merge function defined below 
-data2 = Merge(authors, data2) 
+doimetadata = Merge(authors, doimetadata) 
 
 #Rename keys to DataCite keys and add consistent fields 
-field = data2.pop("dc.publisher")
-data2["publisher"] = field
-field = data2.pop("dc.title")
-data2["title"] = field
-field = data2.pop("dc.date.issued")
-data2["publicationYear"] = field
-field = data2.pop("dc.description.abstract")
-data2["description"] = field
-field = data2.pop("dc.identifier.uri")
-data2["url"] = field
+field = doimetadata.pop("dc.publisher")
+doimetadata["publisher"] = field
+field = doimetadata.pop("dc.title")
+doimetadata["title"] = field
+field = doimetadata.pop("dc.date.issued")
+doimetadata["publicationYear"] = field
+field = doimetadata.pop("dc.description.abstract")
+doimetadata["description"] = field
+field = doimetadata.pop("dc.identifier.uri")
+doimetadata["url"] = field
 #create language field and set to English
-data2["language"] = "en"
-field = data2.pop("dc.type")
-data2["resourceTypeGeneral"] = field
-if 'dc.identifier.orcid' in data2.keys():
-    field = data2.pop("dc.identifier.orcid")
-    data2["nameIdentifier"] = field
+doimetadata["language"] = "en"
+field = doimetadata.pop("dc.type")
+doimetadata["resourceTypeGeneral"] = field
+if 'dc.identifier.orcid' in doimetadata.keys():
+    field = doimetadata.pop("dc.identifier.orcid")
+    doimetadata["nameIdentifier"] = field
 #set language field for abstract to English and descriptionType as abstract
-data2["lang"] = "en"
-data2["descriptionType"] = "Abstract"
+doimetadata["lang"] = "en"
+doimetadata["descriptionType"] = "Abstract"
 #Update publication year from a full date in ISO to just year
-year = data2["publicationYear"]
-data2["publicationYear"] = year[0:4]
+year = doimetadata["publicationYear"]
+doimetadata["publicationYear"] = year[0:4]
 #Create url from handle
-handle = data2["url"].split('/')
+handle = doimetadata["url"].split('/')
 handle = "https://repository.escholarship.umassmed.edu/handle/20.500.14038/" + handle[4]
-data2["url"] = handle
-#print(data2)
+doimetadata["url"] = handle
+#print(doimetadata)
 
 #%%
 #Update author info. Differentiate personal and organizational names and
 # split personal names into given name and family name 
 #Personal authors are identified as having a comma and corporate authors as non-comma
 for i in dcauthorkeys:
-    if "," in data2["creators"][i]["name"]:
-        data2["creators"][i]["nameType"] = "Personal"
-        fullname = data2["creators"][i]["name"].split(', ')
-        data2["creators"][i]["givenName"] = fullname[1]
-        data2["creators"][i]["familyName"] = fullname[0]  
+    if "," in doimetadata["creators"][i]["name"]:
+        doimetadata["creators"][i]["nameType"] = "Personal"
+        fullname = doimetadata["creators"][i]["name"].split(', ')
+        doimetadata["creators"][i]["givenName"] = fullname[1]
+        doimetadata["creators"][i]["familyName"] = fullname[0]  
     else:
-        data2["creators"][i]["nameType"] = "Organizational"
-        data2["creators"][i]["givenName"] = ""
-        data2["creators"][i]["familyName"] = ""
-#print(data2)
+        doimetadata["creators"][i]["nameType"] = "Organizational"
+        doimetadata["creators"][i]["givenName"] = ""
+        doimetadata["creators"][i]["familyName"] = ""
+#print(doimetadata)
 
 #%%
 #Map document types to resourceTypeGeneral and resourceType
 #Removing resource type for Dataset, Preprint, and report because they
 #are redundant
 #Everything else in given the general type of Text
-data2["resourceType"] = data2["resourceTypeGeneral"]
+doimetadata["resourceType"] = doimetadata["resourceTypeGeneral"]
 
-if data2["resourceTypeGeneral"] == "Doctoral Dissertation":
-    data2["resourceTypeGeneral"] = "Dissertation"
-elif data2["resourceTypeGeneral"] == "Master's Thesis":
-    data2["resourceTypeGeneral"] = "Dissertation"
-elif data2["resourceTypeGeneral"] == "Newsletter":
-    data2["resourceTypeGeneral"] = "Text"
-elif data2["resourceTypeGeneral"] == "Poster":
-    data2["resourceType"] = "Conference Poster"
-    data2["resourceTypeGeneral"] = "Text"
-elif data2["resourceTypeGeneral"] == "Presentation":
-    data2["resourceType"] = "Conference Presentation"
-    data2["resourceTypeGeneral"] = "Text"
-elif data2["resourceTypeGeneral"] == "Other":
-    data2["resourceTypeGeneral"] = "Text"
-elif data2["resourceTypeGeneral"] == "Podcast":
-    data2["resourceType"] = "Podcast"
-    data2["resourceTypeGeneral"] = "Sound"
-elif data2["resourceTypeGeneral"] == "Video":
-    data2["resourceType"] = "Video"
-    data2["resourceTypeGeneral"] = "Audiovisual"
-elif data2["resourceType"] == "Dataset": 
-    data2.pop("resourceType")
-elif data2["resourceType"] == "Preprint":
-    data2.pop("resourceType")
-elif data2["resourceType"] == "Report":
-    data2.pop("resourceType")
-else: data2["resourceTypeGeneral"] = "Text"
+if doimetadata["resourceTypeGeneral"] == "Doctoral Dissertation":
+    doimetadata["resourceTypeGeneral"] = "Dissertation"
+elif doimetadata["resourceTypeGeneral"] == "Master's Thesis":
+    doimetadata["resourceTypeGeneral"] = "Dissertation"
+elif doimetadata["resourceTypeGeneral"] == "Newsletter":
+    doimetadata["resourceTypeGeneral"] = "Text"
+elif doimetadata["resourceTypeGeneral"] == "Poster":
+    doimetadata["resourceType"] = "Conference Poster"
+    doimetadata["resourceTypeGeneral"] = "Text"
+elif doimetadata["resourceTypeGeneral"] == "Presentation":
+    doimetadata["resourceType"] = "Conference Presentation"
+    doimetadata["resourceTypeGeneral"] = "Text"
+elif doimetadata["resourceTypeGeneral"] == "Other":
+    doimetadata["resourceTypeGeneral"] = "Text"
+elif doimetadata["resourceTypeGeneral"] == "Podcast":
+    doimetadata["resourceType"] = "Podcast"
+    doimetadata["resourceTypeGeneral"] = "Sound"
+elif doimetadata["resourceTypeGeneral"] == "Video":
+    doimetadata["resourceType"] = "Video"
+    doimetadata["resourceTypeGeneral"] = "Audiovisual"
+elif doimetadata["resourceType"] == "Dataset": 
+    doimetadata.pop("resourceType")
+elif doimetadata["resourceType"] == "Preprint":
+    doimetadata.pop("resourceType")
+elif doimetadata["resourceType"] == "Report":
+    doimetadata.pop("resourceType")
+else: doimetadata["resourceTypeGeneral"] = "Text"
 
 #%%
 #Add parent values and order to create structure of final json file for upload to DataCite
-data3 = data2
+data3 = doimetadata
 data3 = transform(data3, {"titles":["title"]})
 data3 = transform(data3, {"descriptions":["lang","description","descriptionType"]})
 if 'resourceType' in data3.keys():
@@ -251,7 +249,7 @@ for i in dcauthorkeys:
 
 #Add ORCID to creator if applicable
 if 'nameIdentifier' in data3.keys():
-    orcidurl = "https://orcid.org/" + data2["nameIdentifier"]
+    orcidurl = "https://orcid.org/" + doimetadata["nameIdentifier"]
     orcid = {"nameIdentifiers": {
                                 "schemeUri": "https://orcid.org",
                                 "nameIdentifier": orcidurl,
@@ -402,4 +400,5 @@ data6 = open('patchdoi.json')
 data7 = data6.read()
 
 doiuploadresponse = requests.patch(itemurl, cookies=cookies, headers=headers, data=data7)
+
 print(doiuploadresponse.text)

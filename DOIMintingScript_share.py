@@ -14,6 +14,7 @@ import re #regular expressions
 
 #%%
 
+
 #Input your Open Respository url. 
 #If you do not want to submit your repository url each time, paste you url in quotes after the equal symbol. 
 repository = input("Repository url (ex. https://repository.escholarship.umassmed.edu)")
@@ -195,6 +196,7 @@ for i in dcauthorkeys:
 #Everything else in given the general type of Text
 doimetadata["resourceType"] = doimetadata["resourceTypeGeneral"]
 
+#man, really?
 if doimetadata["resourceTypeGeneral"] == "Doctoral Dissertation":
     doimetadata["resourceTypeGeneral"] = "Dissertation"
 elif doimetadata["resourceTypeGeneral"] == "Master's Thesis":
@@ -402,3 +404,4 @@ data7 = data6.read()
 doiuploadresponse = requests.patch(itemurl, cookies=cookies, headers=headers, data=data7)
 
 print(doiuploadresponse.text)
+

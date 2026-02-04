@@ -197,6 +197,7 @@ for i in dcauthorkeys:
 doimetadata["resourceType"] = doimetadata["resourceTypeGeneral"]
 
 #man, really?
+#to do : refacotor this decission tree. find a new algo if possible 
 if doimetadata["resourceTypeGeneral"] == "Doctoral Dissertation":
     doimetadata["resourceTypeGeneral"] = "Dissertation"
 elif doimetadata["resourceTypeGeneral"] == "Master's Thesis":
@@ -404,4 +405,5 @@ data7 = data6.read()
 doiuploadresponse = requests.patch(itemurl, cookies=cookies, headers=headers, data=data7)
 
 print(doiuploadresponse.text)
+
 
